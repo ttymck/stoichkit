@@ -5,10 +5,10 @@ extern crate log;
 use clap::Clap;
 use itertools::Itertools;
 
-use stoichkit::model::{Reaction, Substance};
-use stoichkit::solve::balance;
 use std::fs::read_to_string;
 use stoichkit::ext::parse_chemdraw_reaction;
+use stoichkit::model::{Reaction, Substance};
+use stoichkit::solve::balance;
 
 #[derive(Clap)]
 #[clap(version = "0.2.0")]
@@ -36,7 +36,7 @@ struct Unbal {
     #[clap(about = "Chemical equation [...reactants] = [...products]")]
     substances: Vec<String>,
     #[clap(short, conflicts_with = "substances")]
-    chemdraw_file: Option<String>
+    chemdraw_file: Option<String>,
 }
 
 impl Unbal {
@@ -56,16 +56,23 @@ impl Unbal {
                     .dropping(rx_len)
                     .map(|f| Substance::from_formula(f.as_str()))
                     .collect();
-                match (reagent_input.clone()?.len(), product_input.clone()?.len()) {
+                match (
+                    reagent_input.clone()?.len(),
+                    product_input.clone()?.len(),
+                ) {
                     (x, y) if x >= 1 as usize && y >= 1 as usize => Ok(()),
                     _ => Err("Must provide at least 1 reactant and 1 product"),
                 }?;
                 (reagent_input?, product_input?)
             }
             Some(f) => {
-                let s = read_to_string(f).map_err(|_e| format!("Could not read file {:?}", f))?;
+                let s = read_to_string(f)
+                    .map_err(|_e| format!("Could not read file {:?}", f))?;
                 let result = parse_chemdraw_reaction(s.as_str())?;
-                info!("Parsed reaction {:?} = {:?}", result.reactants, result.products);
+                info!(
+                    "Parsed reaction {:?} = {:?}",
+                    result.reactants, result.products
+                );
                 (result.reactants, result.products)
             }
         };
